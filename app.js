@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const port = process.env.PORT || 3001;
 const cors = require("cors");
-const fetch = require("node-fetch");
+const axios = require("axios");
 const origins = [
   "http://localhost:3000",
   "https://sasa30.com",
@@ -50,10 +50,13 @@ app.get("/api/shopList", (req, res) => {
     res.json("パラメーターの指定が不足しています。");
   }
   console.log(requestUrl);
-  fetch(requestUrl)
-    .then((response) => response.json())
-    .then((data) => {
-      const responseShopList = data.results.shop.map((item) => ({
+
+  axios
+    .get(requestUrl)
+    // thenで成功した場合の処理
+    .then((response) => {
+      const shopsData = response.data.results.shop;
+      const responseShopList = shopsData.map((item) => ({
         itemId: item.id,
         photo: item.photo.pc.l,
         shopName: item.name,
@@ -65,6 +68,11 @@ app.get("/api/shopList", (req, res) => {
         catch: item.catch,
       }));
       res.json(responseShopList);
+    })
+    // catchでエラー時の挙動を定義
+    .catch((err) => {
+      console.log(err);
+      res.json({ message: "サーバーエラーです。" });
     });
 });
 
